@@ -47,7 +47,7 @@ g = create_graph(training_set, IDs)
 print "Training"
 # for each training example we need to compute features
 # in this baseline we will train the model on only 5% of the training set
-to_keep = random.sample(range(len(training_set)), k=int(round(len(training_set)*0.025)))
+to_keep = random.sample(range(len(training_set)), k=int(round(len(training_set)*0.005)))
 training_set_reduced = [training_set[i] for i in to_keep]
 # create training features
 training_features = feature_engineering(training_set_reduced, IDs, node_info, stemmer, stpwds)
@@ -63,14 +63,17 @@ print "Training done"
 
 # ---Test--- #
 print "Testing the results with the rest of the training data"
-local_test_set_index = [i for i in range(len(training_set)) if i not in to_keep]
 # get a subsample to be faster
-local_to_keep = random.sample(local_test_set_index, k=int(round(len(local_test_set_index)*0.025)))
+local_to_keep = random.sample(range(len(training_set)), k=int(round(len(training_set)*0.005)))
+local_to_keep = [i for i in local_to_keep if i not in to_keep]
 local_test_set_reduced = [training_set[i] for i in local_to_keep]
 # get prediction and output score
 local_test_features = feature_engineering(local_test_set_reduced, IDs, node_info, stemmer, stpwds)
 local_pred = classifier.predict(local_test_features)
-print f1_score(labels, local_pred)
+# get corresponding labels
+local_labels = [int(element[2]) for element in local_test_set_reduced]
+local_labels = list(local_labels)
+print f1_score(local_labels, local_pred)
 print "Testing done"
 
 # ---Prediction--- #
