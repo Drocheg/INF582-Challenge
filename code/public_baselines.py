@@ -9,6 +9,9 @@ from feature_engineering import *
 from read_data import *
 from graph_creation import *
 
+# ---Parameters--- #
+submission_mode = False
+
 # ---First Initializations--- #
 path_to_predictions = "../predictions"
 nltk.download('punkt')  # for tokenization
@@ -58,13 +61,14 @@ classifier = svm.LinearSVC()
 classifier.fit(training_features, labels_array)
 
 # ---Test--- #
-# create test features
-testing_features = feature_engineering(testing_set, IDs, node_info, stemmer, stpwds)
-# issue predictions
-predictions_SVM = list(classifier.predict(testing_features))
-# write predictions to .csv file suitable for Kaggle (just make sure to add the column names)
-predictions_SVM = zip(range(len(testing_set)), predictions_SVM)
-with open(path_to_predictions + "improved_predictions.csv", "wb") as pred1:
-    csv_out = csv.writer(pred1)
-    for row in predictions_SVM:
-        csv_out.writerow(row)
+if submission_mode:
+    # create test features
+    testing_features = feature_engineering(testing_set, IDs, node_info, stemmer, stpwds)
+    # issue predictions
+    predictions_SVM = list(classifier.predict(testing_features))
+    # write predictions to .csv file suitable for Kaggle (just make sure to add the column names)
+    predictions_SVM = zip(range(len(testing_set)), predictions_SVM)
+    with open(path_to_predictions + "improved_predictions.csv", "wb") as pred1:
+        csv_out = csv.writer(pred1)
+        for row in predictions_SVM:
+            csv_out.writerow(row)
