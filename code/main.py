@@ -11,9 +11,10 @@ from read_data import *
 from graph_creation import *
 
 # ---Parameters--- #
-submission_mode = False
-TRAINING_SUBSAMPLING = 0.005
-LOCAL_TEST_SUBSAMPLING = 0.005
+submission_mode = True
+submission_name = "0.05_num_edges"
+TRAINING_SUBSAMPLING = 0.05
+LOCAL_TEST_SUBSAMPLING = 0.05
 
 # ---First Initializations--- #
 random.seed(0)  # to be able to reproduce results
@@ -90,7 +91,7 @@ if submission_mode:
     predictions_SVM = list(classifier.predict(testing_features))
     # write predictions to .csv file suitable for Kaggle (just make sure to add the column names)
     predictions_SVM = zip(range(len(testing_set)), predictions_SVM)
-    with open(path_to_predictions + "improved_predictions.csv", "wb") as pred1:
+    with open(path_to_predictions + submission_name + "_predictions.csv", "wb") as pred1:
         csv_out = csv.writer(pred1)
         for row in predictions_SVM:
             csv_out.writerow(row)
