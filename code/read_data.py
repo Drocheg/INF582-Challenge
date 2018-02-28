@@ -1,5 +1,9 @@
 import csv
 def read_data():
+    '''
+    Data loading and preprocessing
+    :return:
+    '''
     path_to_data = "../data/"
     with open(path_to_data + "testing_set.txt", "r") as f:
         reader = csv.reader(f)

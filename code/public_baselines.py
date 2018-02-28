@@ -1,6 +1,5 @@
 import random
 import numpy as np
-import igraph
 from sklearn import svm
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
@@ -10,8 +9,8 @@ from feature_engineering import *
 from read_data import *
 from graph_creation import *
 
+# ---First Initializations--- #
 path_to_predictions = "../predictions"
-
 nltk.download('punkt')  # for tokenization
 nltk.download('stopwords')
 stpwds = set(nltk.corpus.stopwords.words("english"))
@@ -20,21 +19,17 @@ stemmer = nltk.stem.PorterStemmer()
 ###############################
 # beating the random baseline #
 ###############################
-
 # the following script gets an F1 score of approximately 0.66
 
-# data loading and preprocessing 
-
-# the columns of the data frame below are: 
+# ---Read Data--- #
+testing_set, training_set, node_info = read_data()
+# the columns of the node_info data frame are:
 # (1) paper unique ID (integer)
 # (2) publication year (integer)
 # (3) paper title (string)
 # (4) authors (strings separated by ,)
 # (5) name of journal (optional) (string)
 # (6) abstract (string) - lowercased, free of punctuation except intra-word dashes
-
-# ---Read Data--- #
-testing_set, training_set, node_info = read_data()
 IDs = [element[0] for element in node_info]
 
 # ---Compute TFIDF vector of each paper--- #
@@ -44,13 +39,11 @@ vectorizer = TfidfVectorizer(stop_words="english")
 features_TFIDF = vectorizer.fit_transform(corpus)
 
 # ---Create graph--- #
-#g = create_graph()
+g = create_graph(training_set, IDs)
 
 # ---Training--- #
 # for each training example we need to compute features
 # in this baseline we will train the model on only 5% of the training set
-
-# randomly select 5% of training set
 to_keep = random.sample(range(len(training_set)), k=int(round(len(training_set)*0.025)))
 training_set_reduced = [training_set[i] for i in to_keep]
 # create training features
@@ -75,4 +68,3 @@ with open(path_to_predictions + "improved_predictions.csv", "wb") as pred1:
     csv_out = csv.writer(pred1)
     for row in predictions_SVM:
         csv_out.writerow(row)
-

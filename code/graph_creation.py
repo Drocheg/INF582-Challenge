@@ -1,23 +1,29 @@
-def create_graph():
-    return 0
-    ## the following shows how to construct a graph with igraph
-    ## even though in this baseline we don't use it
-    ## look at http://igraph.org/python/doc/igraph.Graph-class.html for feature ideas
+import igraph
 
-    # edges = [(element[0],element[1]) for element in training_set if element[2]=="1"]
 
-    ## some nodes may not be connected to any other node
-    ## hence the need to create the nodes of the graph from node_info.csv,
-    ## not just from the edge list
+def create_graph(edges_set, node_ids):
+    """
+    Creates a graph out of the information given
+        :param edges_set: set of pair (origin id, target id) used to create edges
+        :param node_ids: set of ids used to create nodes
+        :return: the graph created
+    """
+    # look at http://igraph.org/python/doc/igraph.Graph-class.html for feature ideas
 
-    # nodes = IDs
+    edges = [(element[0],element[1]) for element in edges_set if element[2]=="1"]
 
-    ## create empty directed graph
-    # g = igraph.Graph(directed=True)
+    # some nodes may not be connected to any other node
+    # hence the need to create the nodes of the graph from node_info.csv,
+    # not just from the edge list
+    nodes = node_ids
 
-    ## add vertices
-    # g.add_vertices(nodes)
+    # create empty directed graph
+    g = igraph.Graph(directed=True)
 
-    ## add edges
-    # g.add_edges(edges)
+    # add vertices
+    g.add_vertices(nodes)
 
+    # add edges
+    g.add_edges(edges)
+
+    return g
