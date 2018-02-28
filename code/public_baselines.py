@@ -2,6 +2,7 @@ import random
 import numpy as np
 from sklearn import svm
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics import f1_score
 from sklearn.metrics.pairwise import linear_kernel
 import nltk
 import csv
@@ -13,6 +14,7 @@ from graph_creation import *
 submission_mode = False
 
 # ---First Initializations--- #
+random.seed(0)  # to be able to reproduce results
 path_to_predictions = "../predictions"
 nltk.download('punkt')  # for tokenization
 nltk.download('stopwords')
@@ -45,9 +47,10 @@ features_TFIDF = vectorizer.fit_transform(corpus)
 g = create_graph(training_set, IDs)
 
 # ---Training--- #
+print "Training"
 # for each training example we need to compute features
 # in this baseline we will train the model on only 5% of the training set
-to_keep = random.sample(range(len(training_set)), k=int(round(len(training_set)*0.025)))
+to_keep = random.sample(range(len(training_set)), k=int(round(len(training_set)*0.005)))
 training_set_reduced = [training_set[i] for i in to_keep]
 # create training features
 training_features = feature_engineering(training_set_reduced, IDs, node_info, stemmer, stpwds)
@@ -59,9 +62,26 @@ labels_array = np.array(labels)
 classifier = svm.LinearSVC()
 # train model with features and labels
 classifier.fit(training_features, labels_array)
+print "Training done"
 
 # ---Test--- #
+print "Testing the results with the rest of the training data"
+# get a subsample to be faster
+local_to_keep = random.sample(range(len(training_set)), k=int(round(len(training_set)*0.005)))
+local_to_keep = [i for i in local_to_keep if i not in to_keep]
+local_test_set_reduced = [training_set[i] for i in local_to_keep]
+# get prediction and output score
+local_test_features = feature_engineering(local_test_set_reduced, IDs, node_info, stemmer, stpwds)
+local_pred = classifier.predict(local_test_features)
+# get corresponding labels
+local_labels = [int(element[2]) for element in local_test_set_reduced]
+local_labels = list(local_labels)
+print f1_score(local_labels, local_pred)
+print "Testing done"
+
+# ---Prediction--- #
 if submission_mode:
+    print "Creating features and prediction for the test set"
     # create test features
     testing_features = feature_engineering(testing_set, IDs, node_info, stemmer, stpwds)
     # issue predictions
@@ -72,3 +92,4 @@ if submission_mode:
         csv_out = csv.writer(pred1)
         for row in predictions_SVM:
             csv_out.writerow(row)
+    print "Predictions done"

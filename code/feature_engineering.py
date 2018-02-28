@@ -34,6 +34,7 @@ def feature_engineering(information_set, IDs, node_info, stemmer, stpwds):
     w2v = build_w2v(node_info, stemmer, stpwds)
 
     counter = 0
+    print len(information_set), " element to process"
     for i in xrange(len(information_set)):
         source = information_set[i][0]
         target = information_set[i][1]
@@ -59,7 +60,7 @@ def feature_engineering(information_set, IDs, node_info, stemmer, stpwds):
         wmd.append(w2v.wv.wmdistance(source_abstract, target_abstract))
 
         counter += 1
-        if counter + 1 % 1000 == True:
+        if counter % 1000 == 0:
             print counter, "examples processed"
 
     # convert list of lists into array

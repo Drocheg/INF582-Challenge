@@ -9,7 +9,7 @@ def create_graph(edges_set, node_ids):
         :return: the graph created
     """
     # look at http://igraph.org/python/doc/igraph.Graph-class.html for feature ideas
-
+    print "creating graph"
     edges = [(element[0],element[1]) for element in edges_set if element[2]=="1"]
 
     # some nodes may not be connected to any other node
@@ -25,5 +25,5 @@ def create_graph(edges_set, node_ids):
 
     # add edges
     g.add_edges(edges)
-
+    print "graph created"
     return g
