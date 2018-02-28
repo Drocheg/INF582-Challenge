@@ -2,6 +2,7 @@ import random
 import numpy as np
 from sklearn import svm
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics import f1_score
 from sklearn.metrics.pairwise import linear_kernel
 import nltk
 import csv
@@ -10,6 +11,7 @@ from read_data import *
 from graph_creation import *
 
 # ---First Initializations--- #
+random.seed(0)  # to be able to reproduce results
 path_to_predictions = "../predictions"
 nltk.download('punkt')  # for tokenization
 nltk.download('stopwords')
@@ -42,6 +44,7 @@ features_TFIDF = vectorizer.fit_transform(corpus)
 g = create_graph(training_set, IDs)
 
 # ---Training--- #
+print "Training"
 # for each training example we need to compute features
 # in this baseline we will train the model on only 5% of the training set
 to_keep = random.sample(range(len(training_set)), k=int(round(len(training_set)*0.025)))
@@ -56,8 +59,22 @@ labels_array = np.array(labels)
 classifier = svm.LinearSVC()
 # train model with features and labels
 classifier.fit(training_features, labels_array)
+print "Training done"
 
 # ---Test--- #
+print "Testing the results with the rest of the training data"
+local_test_set_index = [i for i in range(len(training_set)) if i not in to_keep]
+# get a subsample to be faster
+local_to_keep = random.sample(local_test_set_index, k=int(round(len(local_test_set_index)*0.025)))
+local_test_set_reduced = [training_set[i] for i in local_to_keep]
+# get prediction and output score
+local_test_features = feature_engineering(local_test_set_reduced, IDs, node_info, stemmer, stpwds)
+local_pred = classifier.predict(local_test_features)
+print f1_score(labels, local_pred)
+print "Testing done"
+
+# ---Prediction--- #
+print "Creating features and prediction for the test set"
 # create test features
 testing_features = feature_engineering(testing_set, IDs, node_info, stemmer, stpwds)
 # issue predictions
@@ -68,3 +85,4 @@ with open(path_to_predictions + "improved_predictions.csv", "wb") as pred1:
     csv_out = csv.writer(pred1)
     for row in predictions_SVM:
         csv_out.writerow(row)
+print "Predictions done"
