@@ -13,7 +13,7 @@ nltk.download('stopwords')
 stpwds = set(nltk.corpus.stopwords.words("english"))
 stemmer = nltk.stem.PorterStemmer()
 
-with open("testing_set.txt", "r") as f:
+with open("data/testing_set.txt", "r") as f:
     reader = csv.reader(f)
     testing_set  = list(reader)
 
@@ -26,7 +26,7 @@ testing_set = [element[0].split(" ") for element in testing_set]
 random_predictions = np.random.choice([0, 1], size=len(testing_set))
 random_predictions = zip(range(len(testing_set)),random_predictions)
 
-with open("random_predictions.csv","wb") as pred:
+with open("data/random_predictions.csv","wb") as pred:
     csv_out = csv.writer(pred)
     for row in random_predictions:
         csv_out.writerow(row)
@@ -49,13 +49,13 @@ with open("random_predictions.csv","wb") as pred:
 # (5) name of journal (optional) (string)
 # (6) abstract (string) - lowercased, free of punctuation except intra-word dashes
 
-with open("training_set.txt", "r") as f:
+with open("data/training_set.txt", "r") as f:
     reader = csv.reader(f)
     training_set  = list(reader)
 
 training_set = [element[0].split(" ") for element in training_set]
 
-with open("node_information.csv", "r") as f:
+with open("data/node_information.csv", "r") as f:
     reader = csv.reader(f)
     node_info  = list(reader)
 
@@ -92,7 +92,7 @@ features_TFIDF = vectorizer.fit_transform(corpus)
 # in this baseline we will train the model on only 5% of the training set
 
 # randomly select 5% of training set
-to_keep = random.sample(range(len(training_set)), k=int(round(len(training_set)*0.05)))
+to_keep = random.sample(range(len(training_set)), k=int(round(len(training_set)*0.025)))
 training_set_reduced = [training_set[i] for i in to_keep]
 
 # we will use three basic features:
@@ -167,12 +167,6 @@ counter = 0
 for i in xrange(len(testing_set)):
     source = testing_set[i][0]
     target = testing_set[i][1]
-    
-    index_source = IDs.index(source)
-    index_target = IDs.index(target)
-    
-    source = training_set_reduced[i][0]
-    target = training_set_reduced[i][1]
     
     index_source = IDs.index(source)
     index_target = IDs.index(target)
