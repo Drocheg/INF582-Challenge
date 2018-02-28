@@ -68,7 +68,7 @@ def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g):
         num_references_target.append(degrees[index_target])
 
         counter += 1
-        if counter % 1000:
+        if counter % 1000 == 0:
             print counter, "examples processed"
 
     list_of_features = []
