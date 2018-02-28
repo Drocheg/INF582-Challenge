@@ -12,13 +12,21 @@ def clean(s, stemmer, stpwds):
     return s
 
 def build_w2v(node_info, stemmer, stpwds):
-    path_to_google_news = '/Users/jacob/Documents/School/INF582/'
-    my_q = 300 # to match dim of GNews word vectors
-    mcount = 5
-    model = Word2Vec(size=my_q, min_count=mcount)
-    cleaned_abstracts = [clean(element[5], stemmer, stpwds) for element in node_info]
-    model.build_vocab(cleaned_abstracts)
-    model.intersect_word2vec_format(path_to_google_news + 'GoogleNews-vectors-negative300.bin.gz', binary=True)
+    try:
+        model = Word2Vec.load("w2v_model")
+        print "Word2Vec model loaded"
+    except:
+        path_to_google_news = '/Users/jacob/Documents/School/INF582/'
+        my_q = 300 # to match dim of GNews word vectors
+        mcount = 5
+        model = Word2Vec(size=my_q, min_count=mcount)
+        cleaned_abstracts = [clean(element[5], stemmer, stpwds) for element in node_info]
+        print "Building Word2Vec vocab..."
+        model.build_vocab(cleaned_abstracts)
+        print "Loading intersect vectors..."
+        model.intersect_word2vec_format(path_to_google_news + 'GoogleNews-vectors-negative300.bin.gz', binary=True)
+        model.save("w2v_model")
+        print "Model saved to disk"
     return model
 
 def feature_engineering(information_set, IDs, node_info, stemmer, stpwds):
@@ -58,7 +66,7 @@ def feature_engineering(information_set, IDs, node_info, stemmer, stpwds):
         wmd.append(w2v.wv.wmdistance(source_abstract, target_abstract))
 
         counter += 1
-        if counter + 1 % 1000 == True:
+        if (counter + 1) % 1000 == True:
             print counter, "examples processed"
 
     # convert list of lists into array
