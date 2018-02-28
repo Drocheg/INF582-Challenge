@@ -1,7 +1,7 @@
 import csv
 def read_data():
     '''
-    Data loading and preprocessing
+    Data loading and preproce
     :return:
     '''
     path_to_data = "../data/"
@@ -16,3 +16,4 @@ def read_data():
     with open(path_to_data + "node_information.csv", "r") as f:
         reader = csv.reader(f)
         node_info = list(reader)
+    return testing_set, training_set, node_info
