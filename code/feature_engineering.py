@@ -3,7 +3,7 @@ from sklearn import preprocessing
 from gensim.models.word2vec import Word2Vec
 
 def clean(s, stemmer, stpwds):
-    s = s.lower.split(" ")
+    s = s.lower().split(" ")
     s = [token for token in s if token not in stpwds]
     s = [stemmer.stem(token) for token in s]
     s = [''.join([elt for elt in token if not elt.isdigit()]) for token in s] # remove digits
