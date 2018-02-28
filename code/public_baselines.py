@@ -55,7 +55,7 @@ print "Training"
 to_keep = random.sample(range(len(training_set)), k=int(round(len(training_set)*TRAINING_SUBSAMPLING)))
 training_set_reduced = [training_set[i] for i in to_keep]
 # create training features
-training_features = feature_engineering(training_set_reduced, IDs, node_info, stemmer, stpwds)
+training_features = feature_engineering(training_set_reduced, IDs, node_info, stemmer, stpwds, g)
 # convert labels into integers then into column array
 labels = [int(element[2]) for element in training_set_reduced]
 labels = list(labels)
@@ -73,7 +73,7 @@ local_to_keep = random.sample(range(len(training_set)), k=int(round(len(training
 local_to_keep = [i for i in local_to_keep if i not in to_keep]
 local_test_set_reduced = [training_set[i] for i in local_to_keep]
 # get prediction and output score
-local_test_features = feature_engineering(local_test_set_reduced, IDs, node_info, stemmer, stpwds)
+local_test_features = feature_engineering(local_test_set_reduced, IDs, node_info, stemmer, stpwds, g)
 local_pred = classifier.predict(local_test_features)
 # get corresponding labels
 local_labels = [int(element[2]) for element in local_test_set_reduced]
