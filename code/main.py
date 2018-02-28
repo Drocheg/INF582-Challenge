@@ -85,7 +85,7 @@ print "Testing done"
 if submission_mode:
     print "Creating features and prediction for the test set"
     # create test features
-    testing_features = feature_engineering(testing_set, IDs, node_info, stemmer, stpwds)
+    testing_features = feature_engineering(testing_set, IDs, node_info, stemmer, stpwds, g)
     # issue predictions
     predictions_SVM = list(classifier.predict(testing_features))
     # write predictions to .csv file suitable for Kaggle (just make sure to add the column names)
