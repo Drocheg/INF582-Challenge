@@ -13,7 +13,9 @@ nltk.download('stopwords')
 stpwds = set(nltk.corpus.stopwords.words("english"))
 stemmer = nltk.stem.PorterStemmer()
 
-with open("testing_set.txt", "r") as f:
+path_to_data = "../data/"
+
+with open(path_to_data + "testing_set.txt", "r") as f:
     reader = csv.reader(f)
     testing_set  = list(reader)
 
@@ -26,7 +28,7 @@ testing_set = [element[0].split(" ") for element in testing_set]
 random_predictions = np.random.choice([0, 1], size=len(testing_set))
 random_predictions = zip(range(len(testing_set)),random_predictions)
 
-with open("random_predictions.csv","wb") as pred:
+with open(path_to_data + "random_predictions.csv","wb") as pred:
     csv_out = csv.writer(pred)
     for row in random_predictions:
         csv_out.writerow(row)
@@ -49,13 +51,13 @@ with open("random_predictions.csv","wb") as pred:
 # (5) name of journal (optional) (string)
 # (6) abstract (string) - lowercased, free of punctuation except intra-word dashes
 
-with open("training_set.txt", "r") as f:
+with open(path_to_data + "training_set.txt", "r") as f:
     reader = csv.reader(f)
     training_set  = list(reader)
 
 training_set = [element[0].split(" ") for element in training_set]
 
-with open("node_information.csv", "r") as f:
+with open(path_to_data + "node_information.csv", "r") as f:
     reader = csv.reader(f)
     node_info  = list(reader)
 
@@ -212,7 +214,7 @@ predictions_SVM = list(classifier.predict(testing_features))
 # write predictions to .csv file suitable for Kaggle (just make sure to add the column names)
 predictions_SVM = zip(range(len(testing_set)), predictions_SVM)
 
-with open("improved_predictions.csv","wb") as pred1:
+with open(path_to_data + "improved_predictions.csv","wb") as pred1:
     csv_out = csv.writer(pred1)
     for row in predictions_SVM:
         csv_out.writerow(row)
