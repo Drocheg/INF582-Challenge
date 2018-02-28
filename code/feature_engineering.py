@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn import preprocessing
 from gensim.models.word2vec import Word2Vec
+import igraph
 
 def clean(s, stemmer, stpwds):
     s = s.lower().split(" ")
@@ -29,7 +30,7 @@ def build_w2v(node_info, stemmer, stpwds):
         print "Model saved to disk"
     return model
 
-def feature_engineering(information_set, IDs, node_info, stemmer, stpwds):
+def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g):
     # number of overlapping words in title
     overlap_title = []
     # temporal distance between the papers
@@ -38,9 +39,16 @@ def feature_engineering(information_set, IDs, node_info, stemmer, stpwds):
     comm_auth = []
     # WMD
     wmd = []
-    w2v = build_w2v(node_info, stemmer, stpwds)
+    # number of references for the source or the target
+    num_references_source = []
+    num_references_target = []
+
+    # w2v = build_w2v(node_info, stemmer, stpwds)
 
     counter = 0
+
+    degrees = g.degree(IDs)
+
     for i in xrange(len(information_set)):
         source = information_set[i][0]
         target = information_set[i][1]
@@ -63,15 +71,24 @@ def feature_engineering(information_set, IDs, node_info, stemmer, stpwds):
         overlap_title.append(len(set(source_title).intersection(set(target_title))))
         temp_diff.append(int(source_info[1]) - int(target_info[1]))
         comm_auth.append(len(set(source_auth).intersection(set(target_auth))))
-        wmd.append(w2v.wv.wmdistance(source_abstract, target_abstract))
+    #    wmd.append(w2v.wv.wmdistance(source_abstract, target_abstract))
+        num_references_source.append(degrees[index_source])
+        num_references_target.append(degrees[index_target])
 
         counter += 1
-        if (counter + 1) % 1000 == True:
+        if (counter+1) % 1000 == 0:
             print counter, "examples processed"
 
+    list_of_features = []
+    list_of_features.append(overlap_title)
+    list_of_features.append(temp_diff)
+    list_of_features.append(comm_auth)
+    # list_of_features.append(wmd)
+    list_of_features.append(num_references_source)
+    list_of_features.append(num_references_target)
     # convert list of lists into array
     # documents as rows, unique words as columns (i.e., example as rows, features as columns)
-    features = np.array([overlap_title, temp_diff, comm_auth, wmd]).T
+    features = np.array(list_of_features).T
     # scale
     features = preprocessing.scale(features)
     return features
