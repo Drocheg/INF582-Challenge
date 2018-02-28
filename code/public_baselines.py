@@ -137,7 +137,7 @@ for i in xrange(len(training_set_reduced)):
     comm_auth.append(len(set(source_auth).intersection(set(target_auth))))
    
     counter += 1
-    if counter % 1000 == True:
+    if counter+1 % 1000 == True:
         print counter, "training examples processsed"
 
 # convert list of lists into array
@@ -192,7 +192,7 @@ for i in xrange(len(testing_set)):
     comm_auth_test.append(len(set(source_auth).intersection(set(target_auth))))
    
     counter += 1
-    if counter % 1000 == True:
+    if counter+1 % 1000 == True:
         print counter, "testing examples processsed"
         
 # convert list of lists into array
