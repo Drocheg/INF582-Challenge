@@ -49,6 +49,7 @@ def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g):
 
     degrees = g.degree(IDs)
 
+    print len(information_set), "examples to process:"
     for i in xrange(len(information_set)):
         source = information_set[i][0]
         target = information_set[i][1]
