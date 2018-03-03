@@ -12,8 +12,8 @@ from graph_creation import *
 
 # ---Parameters--- #
 submission_mode = True
-submission_name = "0.05_num_edges"
-TRAINING_SUBSAMPLING = 0.95
+submission_name = "0.05_num_edges_neighbors_wmd"
+TRAINING_SUBSAMPLING = 0.05
 LOCAL_TEST_SUBSAMPLING = 0.05
 
 # ---First Initializations--- #

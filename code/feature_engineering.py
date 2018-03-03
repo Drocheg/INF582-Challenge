@@ -42,12 +42,17 @@ def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g):
     # number of references for the source or the target
     num_references_source = []
     num_references_target = []
+    # number of common neighbors
+    num_common_neighbors = []
 
-    # w2v = build_w2v(node_info, stemmer, stpwds)
+    w2v = build_w2v(node_info, stemmer, stpwds)
 
     counter = 0
 
     degrees = g.degree(IDs)
+    neighbors_list = []
+    for id in IDs:
+        neighbors_list.append(set(g.neighbors(id)))
 
     print len(information_set), "examples to process:"
     for i in xrange(len(information_set)):
@@ -72,10 +77,10 @@ def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g):
         overlap_title.append(len(set(source_title).intersection(set(target_title))))
         temp_diff.append(int(source_info[1]) - int(target_info[1]))
         comm_auth.append(len(set(source_auth).intersection(set(target_auth))))
-    #    wmd.append(w2v.wv.wmdistance(source_abstract, target_abstract))
+        wmd.append(w2v.wv.wmdistance(source_abstract, target_abstract))
         num_references_source.append(degrees[index_source])
         num_references_target.append(degrees[index_target])
-
+        num_common_neighbors.append(len(neighbors_list[index_source].intersection(neighbors_list[index_target])))
         counter += 1
         if (counter+1) % 1000 == 0:
             print counter, "examples processed"
@@ -84,9 +89,10 @@ def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g):
     list_of_features.append(overlap_title)
     list_of_features.append(temp_diff)
     list_of_features.append(comm_auth)
-    # list_of_features.append(wmd)
+    list_of_features.append(wmd)
     list_of_features.append(num_references_source)
     list_of_features.append(num_references_target)
+    list_of_features.append(num_common_neighbors)
     # convert list of lists into array
     # documents as rows, unique words as columns (i.e., example as rows, features as columns)
     features = np.array(list_of_features).T
