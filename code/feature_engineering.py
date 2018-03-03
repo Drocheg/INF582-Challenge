@@ -3,6 +3,7 @@ from sklearn import preprocessing
 from gensim.models.word2vec import Word2Vec
 import igraph
 
+
 def clean(s, stemmer, stpwds):
     s = s.lower().split(" ")
     s = [token for token in s if token not in stpwds]

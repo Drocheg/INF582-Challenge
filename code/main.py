@@ -3,6 +3,7 @@ import numpy as np
 from sklearn import svm
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import f1_score
+from lightgbm import LGBMClassifier
 from sklearn.metrics.pairwise import linear_kernel
 import nltk
 import csv
@@ -12,9 +13,17 @@ from graph_creation import *
 
 # ---Parameters--- #
 submission_mode = True
-submission_name = "0.05_num_edges_neighbors_wmd"
+testing_mode = False
+submission_name = "lgbm_0.05_g1and2_wmd_auth"
 TRAINING_SUBSAMPLING = 0.05
 LOCAL_TEST_SUBSAMPLING = 0.05
+print "training subsample: ", TRAINING_SUBSAMPLING
+print "testing mode: ", testing_mode
+if testing_mode:
+    print "testing subsample: ", LOCAL_TEST_SUBSAMPLING
+print "submission mode: ", submission_mode
+if submission_mode:
+    print "submitting with name: ", submission_name
 
 # ---First Initializations--- #
 random.seed(0)  # to be able to reproduce results
@@ -62,25 +71,27 @@ labels = [int(element[2]) for element in training_set_reduced]
 labels = list(labels)
 labels_array = np.array(labels)
 # initialize basic SVM
-classifier = svm.LinearSVC()
+#classifier = svm.LinearSVC()
+classifier = LGBMClassifier()
 # train model with features and labels
 classifier.fit(training_features, labels_array)
 print "Training done"
 
 # ---Test--- #
-print "Testing the results with the rest of the training data"
-# get a subsample to be faster
-local_to_keep = random.sample(range(len(training_set)), k=int(round(len(training_set)*LOCAL_TEST_SUBSAMPLING)))
-local_to_keep = [i for i in local_to_keep if i not in to_keep]
-local_test_set_reduced = [training_set[i] for i in local_to_keep]
-# get prediction and output score
-local_test_features = feature_engineering(local_test_set_reduced, IDs, node_info, stemmer, stpwds, g)
-local_pred = classifier.predict(local_test_features)
-# get corresponding labels
-local_labels = [int(element[2]) for element in local_test_set_reduced]
-local_labels = list(local_labels)
-print f1_score(local_labels, local_pred)
-print "Testing done"
+if testing_mode:
+    print "Testing the results with the rest of the training data"
+    # get a subsample to be faster
+    local_to_keep = random.sample(range(len(training_set)), k=int(round(len(training_set)*LOCAL_TEST_SUBSAMPLING)))
+    local_to_keep = [i for i in local_to_keep if i not in to_keep]
+    local_test_set_reduced = [training_set[i] for i in local_to_keep]
+    # get prediction and output score
+    local_test_features = feature_engineering(local_test_set_reduced, IDs, node_info, stemmer, stpwds, g)
+    local_pred = classifier.predict(local_test_features)
+    # get corresponding labels
+    local_labels = [int(element[2]) for element in local_test_set_reduced]
+    local_labels = list(local_labels)
+    print f1_score(local_labels, local_pred)
+    print "Testing done"
 
 # ---Prediction--- #
 if submission_mode:
