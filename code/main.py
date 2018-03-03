@@ -13,12 +13,12 @@ from graph_creation import *
 # ---Parameters--- #
 submission_mode = True
 submission_name = "0.05_num_edges"
-TRAINING_SUBSAMPLING = 0.05
+TRAINING_SUBSAMPLING = 0.95
 LOCAL_TEST_SUBSAMPLING = 0.05
 
 # ---First Initializations--- #
 random.seed(0)  # to be able to reproduce results
-path_to_predictions = "../predictions"
+path_to_predictions = "../predictions/"
 nltk.download('punkt')  # for tokenization
 nltk.download('stopwords')
 stpwds = set(nltk.corpus.stopwords.words("english"))
