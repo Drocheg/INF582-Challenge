@@ -42,12 +42,12 @@ def count_authLinksStoT (information_set, node_info):
 
         source_auth = source_info[3].split(",")
         target_auth = target_info[3].split(",")
-        
+
         for s in source_auth:
             s.replace(' ', '')
         for t in target_auth:
             t.replace(' ', '')
-        
+
         for s in source_auth:
             for t in target_auth:
                 key = (s,t)
@@ -56,9 +56,9 @@ def count_authLinksStoT (information_set, node_info):
                 else:
                     authLinks[key] = 1
     return authLinks
-        
-    
-def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g):
+
+
+def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g, authors_citations_dictionary):
     # number of overlapping words in title
     overlap_title = []
     # temporal distance between the papers
@@ -76,12 +76,11 @@ def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g):
     w2v = build_w2v(node_info, stemmer, stpwds)
 
     # the average number of citations the authors of target have received from authors of source
-    avg_number_citations_of_authors = []   
+    avg_number_citations_of_authors = []
     # Authors link counter
-    authLinks = count_authLinksStoT(information_set, node_info)
+    authLinks = count_authLinksStoT()
 
     counter = 0
-
     degrees = g.degree(IDs)
     neighbors_list = []
     for id in IDs:
@@ -95,8 +94,8 @@ def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g):
         index_source = IDs.index(source)
         index_target = IDs.index(target)
 
-        source_info = [element for element in node_info if element[0] == source][0]
-        target_info = [element for element in node_info if element[0] == target][0]
+        source_info = node_info[index_source]
+        target_info = node_info[index_target]
 
         source_title = clean(source_info[2], stemmer, stpwds)
         target_title = clean(target_info[2], stemmer, stpwds)
@@ -114,7 +113,7 @@ def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g):
         num_references_source.append(degrees[index_source])
         num_references_target.append(degrees[index_target])
         num_common_neighbors.append(len(neighbors_list[index_source].intersection(neighbors_list[index_target])))
-        
+
         # Count the average number of citations the authors of target have received from authors of source
         summ = 0
         count = 0

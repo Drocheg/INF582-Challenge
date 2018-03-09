@@ -5,18 +5,20 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import f1_score
 from lightgbm import LGBMClassifier
 from sklearn.metrics.pairwise import linear_kernel
+from sklearn.linear_model import LogisticRegression
 import nltk
 import csv
+import pickle
 from feature_engineering import *
 from read_data import *
 from graph_creation import *
 
 # ---Parameters--- #
 submission_mode = True
-testing_mode = False
-submission_name = "lgbm_0.05_g1and2_wmd_auth"
-TRAINING_SUBSAMPLING = 0.05
-LOCAL_TEST_SUBSAMPLING = 0.05
+testing_mode = True
+submission_name = "logisitcR_0.025_g1and2_wmd"
+TRAINING_SUBSAMPLING = 0.025
+LOCAL_TEST_SUBSAMPLING = 0.025
 print "training subsample: ", TRAINING_SUBSAMPLING
 print "testing mode: ", testing_mode
 if testing_mode:
@@ -57,7 +59,8 @@ features_TFIDF = vectorizer.fit_transform(corpus)
 
 # ---Create graph--- #
 g = create_graph(training_set, IDs)
-
+authors_citations_dictionary = []
+# authors_citations_dictionary = create_authors_dictionary(training_set, node_info)
 # ---Training--- #
 print "Training"
 # for each training example we need to compute features
@@ -65,14 +68,15 @@ print "Training"
 to_keep = random.sample(range(len(training_set)), k=int(round(len(training_set)*TRAINING_SUBSAMPLING)))
 training_set_reduced = [training_set[i] for i in to_keep]
 # create training features
-training_features = feature_engineering(training_set_reduced, IDs, node_info, stemmer, stpwds, g)
+training_features = feature_engineering(training_set_reduced, IDs, node_info, stemmer, stpwds, g, authors_citations_dictionary)
 # convert labels into integers then into column array
 labels = [int(element[2]) for element in training_set_reduced]
 labels = list(labels)
 labels_array = np.array(labels)
 # initialize basic SVM
 #classifier = svm.LinearSVC()
-classifier = LGBMClassifier()
+#classifier = LGBMClassifier()
+classifier = LogisticRegression()
 # train model with features and labels
 classifier.fit(training_features, labels_array)
 print "Training done"
@@ -85,7 +89,7 @@ if testing_mode:
     local_to_keep = [i for i in local_to_keep if i not in to_keep]
     local_test_set_reduced = [training_set[i] for i in local_to_keep]
     # get prediction and output score
-    local_test_features = feature_engineering(local_test_set_reduced, IDs, node_info, stemmer, stpwds, g)
+    local_test_features = feature_engineering(local_test_set_reduced, IDs, node_info, stemmer, stpwds, g, authors_citations_dictionary)
     local_pred = classifier.predict(local_test_features)
     # get corresponding labels
     local_labels = [int(element[2]) for element in local_test_set_reduced]
@@ -97,7 +101,7 @@ if testing_mode:
 if submission_mode:
     print "Creating features and prediction for the test set"
     # create test features
-    testing_features = feature_engineering(testing_set, IDs, node_info, stemmer, stpwds, g)
+    testing_features = feature_engineering(testing_set, IDs, node_info, stemmer, stpwds, g, authors_citations_dictionary)
     # issue predictions
     predictions_SVM = list(classifier.predict(testing_features))
     # write predictions to .csv file suitable for Kaggle (just make sure to add the column names)
