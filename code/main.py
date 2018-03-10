@@ -6,9 +6,11 @@ from sklearn.metrics import f1_score
 from lightgbm import LGBMClassifier
 from sklearn import svm
 from sklearn.metrics.pairwise import linear_kernel
+from sklearn.linear_model import LogisticRegression
 import nltk
 import csv
 import sys
+import pickle
 from feature_engineering import *
 from classifier_testing import *
 from read_data import *
@@ -67,7 +69,8 @@ features_TFIDF = vectorizer.fit_transform(corpus)
 
 # ---Create graph--- #
 g = create_graph(training_set, IDs)
-
+authors_citations_dictionary = []
+# authors_citations_dictionary = create_authors_dictionary(training_set, node_info)
 # ---Training--- #
 print "Training"
 # for each training example we need to compute features
@@ -80,7 +83,7 @@ if quick_eval_mode:
     training_features = np.load('./data/training_features10.npy')
     labels_array = np.load('./data/labels_array10.npy')
 else:
-    training_features = feature_engineering(training_set_reduced, IDs, node_info, stemmer, stpwds, g)
+    training_features = feature_engineering(training_set_reduced, IDs, node_info, stemmer, stpwds, g, authors_citations_dictionary)
     np.save('./data/training_features.npy', training_features)
     # convert labels into integers then into column array
     labels = [int(element[2]) for element in training_set_reduced]
@@ -116,7 +119,7 @@ if testing_mode:
         local_to_keep = [i for i in local_to_keep if i not in to_keep]
         local_test_set_reduced = [training_set[i] for i in local_to_keep]
         # get prediction and output score
-        local_test_features = feature_engineering(local_test_set_reduced, IDs, node_info, stemmer, stpwds, g)
+        local_test_features = feature_engineering(local_test_set_reduced, IDs, node_info, stemmer, stpwds, g, authors_citations_dictionary)
         local_pred = classifier.predict(local_test_features)
         # get corresponding labels
         local_labels = [int(element[2]) for element in local_test_set_reduced]
@@ -128,8 +131,7 @@ if testing_mode:
 if submission_mode:
     print "Creating features and prediction for the test set"
     # create test features
-    testing_features = feature_engineering(testing_set, IDs, node_info, stemmer, stpwds, g)
-
+    testing_features = feature_engineering(testing_set, IDs, node_info, stemmer, stpwds, g, authors_citations_dictionary)
     # issue predictions
     if probabilistic_mode:
         # average the probabilistic scores from all used classifiers
