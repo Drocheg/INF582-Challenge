@@ -154,7 +154,7 @@ def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g, pai
     list_of_features.append(num_common_neighbors)
     list_of_features.append(avg_number_citations_of_authors)
     list_of_features.append(num_keywords_graph_of_words)
-    list_of_features.append(pairwise_similarity_number)
+    #list_of_features.append(pairwise_similarity_number)
     # convert list of lists into array
     # documents as rows, unique words as columns (i.e., example as rows, features as columns)
     features = np.array(list_of_features).T

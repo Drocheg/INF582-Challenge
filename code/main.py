@@ -68,7 +68,7 @@ corpus = [element[5] for element in node_info]
 vectorizer = TfidfVectorizer(stop_words="english")
 # each row is a node in the order of node_info
 features_TFIDF = vectorizer.fit_transform(corpus)
-pairwise_similarity = features_TFIDF * features_TFIDF.T
+pairwise_similarity = [] #features_TFIDF * features_TFIDF.T
 #print pairwise_similarity.shape
 # ---Create graph--- #
 g = create_graph(training_set, IDs)
