@@ -43,12 +43,12 @@ def count_authLinksStoT (information_set, node_info):
 
         source_auth = source_info[3].split(",")
         target_auth = target_info[3].split(",")
-
+        
         for s in source_auth:
             s.replace(' ', '')
         for t in target_auth:
             t.replace(' ', '')
-
+        
         for s in source_auth:
             for t in target_auth:
                 key = (s,t)
@@ -57,8 +57,6 @@ def count_authLinksStoT (information_set, node_info):
                 else:
                     authLinks[key] = 1
     return authLinks
-
-
 
 
 def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g, pairwise_similarity):
@@ -85,11 +83,12 @@ def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g, pai
     w2v = build_w2v(node_info, stemmer, stpwds)
 
     # the average number of citations the authors of target have received from authors of source
-    avg_number_citations_of_authors = []
+    avg_number_citations_of_authors = []   
     # Authors link counter
-    authLinks = count_authLinksStoT(information_set, node_info)
+    #authLinks = count_authLinksStoT(information_set, node_info)
 
     counter = 0
+
     degrees = g.degree(IDs)
     neighbors_list = []
     for id in IDs:
@@ -103,8 +102,8 @@ def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g, pai
         index_source = IDs.index(source)
         index_target = IDs.index(target)
 
-        source_info = node_info[index_source]
-        target_info = node_info[index_target]
+        source_info = [element for element in node_info if element[0] == source][0]
+        target_info = [element for element in node_info if element[0] == target][0]
 
         source_title = clean(source_info[2], stemmer, stpwds)
         target_title = clean(target_info[2], stemmer, stpwds)
@@ -122,25 +121,27 @@ def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g, pai
         num_references_source.append(degrees[index_source])
         num_references_target.append(degrees[index_target])
         num_common_neighbors.append(len(neighbors_list[index_source].intersection(neighbors_list[index_target])))
+
        # num_keywords_graph_of_words.append(len(set(keywords_graph_of_words(source_abstract)).intersection(set(keywords_graph_of_words(target_abstract)))))
        # print pairwise_similarity.shape
-        pairwise_similarity_number.append(pairwise_similarity[index_source, index_target])
+     #   pairwise_similarity_number.append(pairwise_similarity[index_source, index_target])
+
         # Count the average number of citations the authors of target have received from authors of source
-        summ = 0
-        count = 0
-        for s in source_auth:
-            for t in target_auth:
-                key = (s,t)
-                if key in authLinks:
-                    summ += authLinks[key]
-                    count += 1
-        if count == 0:
-            avg_number_citations_of_authors.append(0)
-        else:
-            avg_number_citations_of_authors.append(summ/count)
+     #   summ = 0
+     #   count = 0
+      #  for s in source_auth:
+      #      for t in target_auth:
+       #         key = (s,t)
+      #          if key in authLinks:
+        #            summ += authLinks[key]
+        #            count += 1
+      #  if count == 0:
+      #      avg_number_citations_of_authors.append(0)
+      #  else:
+      #      avg_number_citations_of_authors.append(summ/count)
 
         counter += 1
-        if (counter+1) % 1000 == 0:
+        if counter % 1000 == 0:
             print counter, "examples processed"
 
     list_of_features = []
@@ -151,9 +152,9 @@ def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g, pai
     list_of_features.append(num_references_source)
     list_of_features.append(num_references_target)
     list_of_features.append(num_common_neighbors)
-    list_of_features.append(avg_number_citations_of_authors)
+   # list_of_features.append(avg_number_citations_of_authors)
    # list_of_features.append(num_keywords_graph_of_words)
-    list_of_features.append(pairwise_similarity_number)
+ #   list_of_features.append(pairwise_similarity_number)
     # convert list of lists into array
     # documents as rows, unique words as columns (i.e., example as rows, features as columns)
     features = np.array(list_of_features).T
