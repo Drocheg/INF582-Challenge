@@ -111,7 +111,7 @@ if classifier_tuning_mode:
 else:
     clfs = []
     clfs.append(RandomForestClassifier(n_estimators=45, max_depth=25, min_samples_leaf=2, random_state=seed))
-    clfs.append(svm.SVC(C=5, gamma=0.015))
+    clfs.append(svm.SVC(C=5, gamma=0.015, probability=True))
     clfs.append(LGBMClassifier())
     clfs_names = ["random_forest", "SVC", "LGBM"]
 
