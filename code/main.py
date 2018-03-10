@@ -118,6 +118,7 @@ else:
 
 if cv_on:
     count_classifier = 0
+    predictions_total = np.zeros(len(testing_set))
     for classifier in clfs:
         print "\n\nClassifier: "
         print classifier
@@ -145,7 +146,8 @@ if cv_on:
             cv_index += 1
         print "mean score: ", sum(validation_scores)/5
         predictions /= 5
-        predictions_true = [0 if x > 0.5 else 1 for x in predictions]
+        predictions_total += predictions
+        predictions_true = [0 if x < 0.5 else 1 for x in predictions]
         # predictions_med = zip(range(len(testing_set)), predictions_med)
         predictions_true = zip(range(len(testing_set)), predictions_true)
         with open(path_to_predictions + submission_name + "_" + clfs_names[count_classifier] + "_predictions.csv", "wb") as pred1:
@@ -154,6 +156,17 @@ if cv_on:
             for row in predictions_true:
                 csv_out.writerow(row)
         print "Predictions done"
+        count_classifier += 1
+    predictions_total /= 3
+    predictions_true = [0 if x < 0.5 else 1 for x in predictions_total]
+    # predictions_med = zip(range(len(testing_set)), predictions_med)
+    predictions_true = zip(range(len(testing_set)), predictions_true)
+    with open(path_to_predictions + submission_name + "_predictions_total.csv",
+              "wb") as pred1:
+        csv_out = csv.writer(pred1)
+        csv_out.writerow(('ID', 'category'))
+        for row in predictions_true:
+            csv_out.writerow(row)
 else:
     # train model with features and labels
     for classifier in clfs:
