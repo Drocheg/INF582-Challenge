@@ -57,7 +57,6 @@ def count_authLinksStoT (information_set, node_info):
                     authLinks[key] = 1
     return authLinks
         
-    
 def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g):
     # number of overlapping words in title
     overlap_title = []
