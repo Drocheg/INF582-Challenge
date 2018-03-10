@@ -26,9 +26,9 @@ quick_eval_mode = False
 classifier_tuning_mode = False
 probabilistic_mode = False
 cv_on = True
-submission_name = "all_data_g1and2_wmd_tfidf"
-TRAINING_SUBSAMPLING = 0.0001
-LOCAL_TEST_SUBSAMPLING = 0.0001
+submission_name = "0.05_g1and2_wmd_gow_auth_citation_cv"
+TRAINING_SUBSAMPLING = 0.05
+LOCAL_TEST_SUBSAMPLING = 0.05
 seed = 1337
 print "training subsample: ", TRAINING_SUBSAMPLING
 print "testing mode: ", testing_mode
@@ -68,7 +68,7 @@ corpus = [element[5] for element in node_info]
 vectorizer = TfidfVectorizer(stop_words="english")
 # each row is a node in the order of node_info
 features_TFIDF = vectorizer.fit_transform(corpus)
-pairwise_similarity = []#features_TFIDF * features_TFIDF.T
+pairwise_similarity = features_TFIDF * features_TFIDF.T
 #print pairwise_similarity.shape
 # ---Create graph--- #
 g = create_graph(training_set, IDs)
@@ -85,7 +85,7 @@ training_set_reduced = [training_set[i] for i in to_keep]
 # TODO delete
 #testing_features = feature_engineering(testing_set, IDs, node_info, stemmer, stpwds, g, pairwise_similarity)
 #np.save(path_to_data + 'testing_features100.npy', testing_features)
-testing_set = testing_set[:100] # TODO delete
+#testing_set = testing_set[:100] # TODO delete
 if quick_eval_mode:
     print "Loading pre-trained features"
     training_features = np.load(path_to_data + 'training_features100.npy')
@@ -93,14 +93,14 @@ if quick_eval_mode:
     labels_array = np.load(path_to_data + 'labels_array100.npy')
 else:
     training_features = feature_engineering(training_set_reduced, IDs, node_info, stemmer, stpwds, g, pairwise_similarity)
-    np.save(path_to_data + 'training_features_test.npy', training_features)
+    np.save(path_to_data + 'training_features_005.npy', training_features)
     testing_features = feature_engineering(testing_set, IDs, node_info, stemmer, stpwds, g, pairwise_similarity)
-    np.save(path_to_data + 'training_features_test.npy', testing_features)
+    np.save(path_to_data + 'training_features_005.npy', testing_features)
     # convert labels into integers then into column array
     labels = [int(element[2]) for element in training_set_reduced]
     labels = list(labels)
     labels_array = np.array(labels)
-    np.save(path_to_data + 'labels_array_test.npy', labels_array)
+    np.save(path_to_data + 'labels_array_005.npy', labels_array)
     print "Features calculated"
 
 # initialize classifier(s)
