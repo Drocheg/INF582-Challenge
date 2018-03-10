@@ -129,7 +129,7 @@ def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g):
             avg_number_citations_of_authors.append(summ/count)
 
         counter += 1
-        if (counter+1) % 1000 == 0:
+        if counter % 1000 == 0:
             print counter, "examples processed"
 
     list_of_features = []
