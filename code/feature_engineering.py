@@ -2,6 +2,7 @@ import numpy as np
 from sklearn import preprocessing
 from gensim.models.word2vec import Word2Vec
 import igraph
+from graph_of_words import *
 
 
 def clean(s, stemmer, stpwds):
@@ -58,7 +59,9 @@ def count_authLinksStoT (information_set, node_info):
     return authLinks
 
 
-def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g, authors_citations_dictionary):
+
+
+def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g, pairwise_similarity):
     # number of overlapping words in title
     overlap_title = []
     # temporal distance between the papers
@@ -73,12 +76,18 @@ def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g, aut
     # number of common neighbors
     num_common_neighbors = []
 
+    # number of keywords: graph of words
+    num_keywords_graph_of_words = []
+
+    # TF_IDF
+    pairwise_similarity_number = []
+
     w2v = build_w2v(node_info, stemmer, stpwds)
 
     # the average number of citations the authors of target have received from authors of source
     avg_number_citations_of_authors = []
     # Authors link counter
-    authLinks = count_authLinksStoT()
+    authLinks = count_authLinksStoT(information_set, node_info)
 
     counter = 0
     degrees = g.degree(IDs)
@@ -113,7 +122,9 @@ def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g, aut
         num_references_source.append(degrees[index_source])
         num_references_target.append(degrees[index_target])
         num_common_neighbors.append(len(neighbors_list[index_source].intersection(neighbors_list[index_target])))
-
+       # num_keywords_graph_of_words.append(len(set(keywords_graph_of_words(source_abstract)).intersection(set(keywords_graph_of_words(target_abstract)))))
+       # print pairwise_similarity.shape
+        pairwise_similarity_number.append(pairwise_similarity[index_source, index_target])
         # Count the average number of citations the authors of target have received from authors of source
         summ = 0
         count = 0
@@ -141,6 +152,8 @@ def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g, aut
     list_of_features.append(num_references_target)
     list_of_features.append(num_common_neighbors)
     list_of_features.append(avg_number_citations_of_authors)
+   # list_of_features.append(num_keywords_graph_of_words)
+    list_of_features.append(pairwise_similarity_number)
     # convert list of lists into array
     # documents as rows, unique words as columns (i.e., example as rows, features as columns)
     features = np.array(list_of_features).T
