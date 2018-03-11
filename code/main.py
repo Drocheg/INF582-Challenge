@@ -26,7 +26,7 @@ quick_eval_mode = True
 classifier_tuning_mode = False
 probabilistic_mode = False
 cv_on = True
-submission_name = "0.05_g1and2_wmd_idf_auth_citation_cv"
+submission_name = "all_cv"
 TRAINING_SUBSAMPLING = 0.05
 LOCAL_TEST_SUBSAMPLING = 0.05
 seed = 1337
@@ -67,11 +67,11 @@ IDs = [element[0] for element in node_info]
 corpus = [element[5] for element in node_info]
 vectorizer = TfidfVectorizer(stop_words="english")
 # each row is a node in the order of node_info
-features_TFIDF = vectorizer.fit_transform(corpus)
-pairwise_similarity = features_TFIDF * features_TFIDF.T
+#features_TFIDF = vectorizer.fit_transform(corpus)
+pairwise_similarity = [] #features_TFIDF * features_TFIDF.T
 #print pairwise_similarity.shape
 # ---Create graph--- #
-g = create_graph(training_set, IDs)
+# g = create_graph(training_set, IDs)
 #authors_citations_dictionary = []
 # authors_citations_dictionary = create_authors_dictionary(training_set, node_info)
 # ---Training--- #
@@ -87,6 +87,10 @@ if quick_eval_mode:
     training_features = np.load(path_to_data + 'training_features100.npy')
     testing_features = np.load(path_to_data + 'testing_features100.npy')
     labels_array = np.load(path_to_data + 'labels_array100.npy')
+    training_auth_feature = np.array([np.load(path_to_data + 'avg_auth_train.npy').squeeze()]).T
+    testing_auth_feature = np.array([np.load(path_to_data + 'avg_auth_test.npy').squeeze()]).T
+    training_features = np.concatenate((training_features, training_auth_feature), axis=1)
+    testing_features = np.concatenate((testing_features, testing_auth_feature), axis=1)
 else:
     training_features = feature_engineering(training_set_reduced, IDs, node_info, stemmer, stpwds, g, pairwise_similarity)
     np.save(path_to_data + 'training_features_005.npy', training_features)
@@ -106,8 +110,8 @@ if classifier_tuning_mode:
     sys.exit(0)
 else:
     clfs = []
-    clfs.append(RandomForestClassifier(n_estimators=45, max_depth=25, min_samples_leaf=2, random_state=seed))
-    clfs.append(svm.SVC(C=5, gamma=0.015, probability=True))
+   # clfs.append(RandomForestClassifier(n_estimators=45, max_depth=25, min_samples_leaf=2, random_state=seed))
+   # clfs.append(svm.SVC(C=5, gamma=0.015, probability=True))
     clfs.append(LGBMClassifier())
     clfs_names = ["random_forest", "SVC", "LGBM"]
 
