@@ -21,14 +21,14 @@ from sklearn.ensemble import RandomForestClassifier
 
 # ---Parameters--- #
 submission_mode = False
-testing_mode = False
+testing_mode = True
 quick_eval_mode = True
 classifier_tuning_mode = False
 probabilistic_mode = False
-cv_on = True
+cv_on = False
 submission_name = "0.05_g1and2_wmd_idf_auth_citation_cv"
 TRAINING_SUBSAMPLING = 0.05
-LOCAL_TEST_SUBSAMPLING = 0.05
+LOCAL_TEST_SUBSAMPLING = 0.025
 seed = 1337
 print "training subsample: ", TRAINING_SUBSAMPLING
 print "testing mode: ", testing_mode
@@ -111,8 +111,14 @@ if classifier_tuning_mode:
 else:
     clfs = []
     clfs.append(RandomForestClassifier(n_estimators=45, max_depth=25, min_samples_leaf=2, random_state=seed))
-    clfs.append(svm.SVC(C=5, gamma=0.015, probability=True))
+    clfs.append(RandomForestClassifier(n_estimators=45, max_depth=25, min_samples_leaf=2, random_state=seed*2))
+    clfs.append(RandomForestClassifier(n_estimators=45, max_depth=25, min_samples_leaf=2, random_state=seed*3))
     clfs.append(LGBMClassifier())
+    clfs.append(LGBMClassifier())
+    clfs.append(LGBMClassifier())
+    #clfs.append(RandomForestClassifier(n_estimators=45, max_depth=25, min_samples_leaf=2, random_state=seed*4))
+    #clfs.append(RandomForestClassifier(n_estimators=45, max_depth=25, min_samples_leaf=2, random_state=seed*5))
+    #clfs.append(svm.SVC(C=16, gamma=0.125, probability=True))
     clfs_names = ["random_forest", "SVC", "LGBM"]
 
 
@@ -170,28 +176,45 @@ if cv_on:
 else:
     # train model with features and labels
     for classifier in clfs:
+        print "Training single classifier..."
         classifier.fit(training_features, labels_array)
+        print "Done"
     print "Training done"
 
     # ---Test--- #
     if testing_mode:
 
+        # get a subsample to be faster
+        local_to_keep = random.sample(range(len(training_set)), k=int(round(len(training_set)*LOCAL_TEST_SUBSAMPLING)))
+        local_to_keep = [i for i in local_to_keep if i not in to_keep]
+        local_test_set_reduced = [training_set[i] for i in local_to_keep]
+        # get prediction and output score
+        print "Calculating local test features"
+        local_test_features = feature_engineering(local_test_set_reduced, IDs, node_info, stemmer, stpwds, g, pairwise_similarity)
+        # get corresponding labels
+        local_labels = [int(element[2]) for element in local_test_set_reduced]
+        local_labels = list(local_labels)
+
+        # average the probabilistic scores from all used classifiers
+        avg_prob_predictions = np.array(np.zeros((len(local_test_features),2)))
+
         for classifier in clfs:
             print "\n\nClassifier: "
             print classifier
             print "\nTesting the results with the rest of the training data"
-            # get a subsample to be faster
-            local_to_keep = random.sample(range(len(training_set)), k=int(round(len(training_set)*LOCAL_TEST_SUBSAMPLING)))
-            local_to_keep = [i for i in local_to_keep if i not in to_keep]
-            local_test_set_reduced = [training_set[i] for i in local_to_keep]
-            # get prediction and output score
-            local_test_features = feature_engineering(local_test_set_reduced, IDs, node_info, stemmer, stpwds, g, pairwise_similarity)
+
+            prob_predictions = np.array(list(classifier.predict_proba(local_test_features)))
+            prob_predictions = prob_predictions/len(clfs)
+            avg_prob_predictions += prob_predictions
+
             local_pred = classifier.predict(local_test_features)
-            # get corresponding labels
-            local_labels = [int(element[2]) for element in local_test_set_reduced]
-            local_labels = list(local_labels)
+
             print f1_score(local_labels, local_pred)
-            print "Testing done"
+
+        ensemble_predictions = [0 if x>0.5 else 1 for x in avg_prob_predictions[:, 0]]
+        print "\n\nEnsemble of all classifiers: "
+        print f1_score(local_labels, ensemble_predictions)
+
 
     # ---Prediction--- #
     if submission_mode:
