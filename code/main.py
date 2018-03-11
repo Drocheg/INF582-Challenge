@@ -22,7 +22,7 @@ from sklearn.ensemble import RandomForestClassifier
 # ---Parameters--- #
 submission_mode = False
 testing_mode = False
-quick_eval_mode = False
+quick_eval_mode = True
 classifier_tuning_mode = False
 probabilistic_mode = False
 cv_on = True
