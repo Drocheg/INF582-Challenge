@@ -26,9 +26,9 @@ def tune_SVC(train_x, train_y):
     svc = svm.SVC(kernel='rbf')
     # https://www.csie.ntu.edu.tw/~cjlin/papers/guide/guide.pdf
     params = {
-        'C': [2**(-5), 2**(-3), 2**(-1), 2**0, 2**2, 2**4, 2**6],
-        'gamma': [2**(-7), 2**(-5), 2**(-3), 2**(-1), 2**1, 2**3]}
-    
-    CV_svc = GridSearchCV(estimator=svc, param_grid=params, cv=10)
+        'C': [2**(-3), 2**(-1), 2**0, 2**2, 2**4, 2**6],
+        'gamma': [2**(-7), 2**(-5), 2**(-3), 2**(-1), 2**1]}
+    # {'C': 16, 'gamma': 0.125}
+    CV_svc = GridSearchCV(estimator=svc, param_grid=params, cv=6, n_jobs=-1, verbose=100)
     CV_svc.fit(train_x, train_y)
     print CV_svc.best_params_

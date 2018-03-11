@@ -19,7 +19,7 @@ from sklearn.ensemble import RandomForestClassifier
 
 
 # ---Parameters--- #
-submission_mode = True
+submission_mode = False
 testing_mode = False
 quick_eval_mode = True
 classifier_tuning_mode = True
@@ -80,16 +80,16 @@ training_set_reduced = [training_set[i] for i in to_keep]
 # create training features
 if quick_eval_mode:
     print "Loading pre-trained features"
-    training_features = np.load('./data/training_features10.npy')
-    labels_array = np.load('./data/labels_array10.npy')
+    training_features = np.load('../data/training_features10.npy')
+    labels_array = np.load('../data/labels_array10.npy')
 else:
     training_features = feature_engineering(training_set_reduced, IDs, node_info, stemmer, stpwds, g, authors_citations_dictionary)
-    np.save('./data/training_features.npy', training_features)
+    np.save('../data/training_features.npy', training_features)
     # convert labels into integers then into column array
     labels = [int(element[2]) for element in training_set_reduced]
     labels = list(labels)
     labels_array = np.array(labels)
-    np.save('./data/labels_array.npy', labels_array)
+    np.save('../data/labels_array.npy', labels_array)
     print "Features calculated"
 
 # initialize classifier(s)
