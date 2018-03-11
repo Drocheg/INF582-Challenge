@@ -22,7 +22,7 @@ from sklearn.ensemble import RandomForestClassifier
 # ---Parameters--- #
 submission_mode = False
 testing_mode = False
-quick_eval_mode = False
+quick_eval_mode = True
 classifier_tuning_mode = False
 probabilistic_mode = False
 cv_on = True
@@ -68,7 +68,7 @@ corpus = [element[5] for element in node_info]
 vectorizer = TfidfVectorizer(stop_words="english")
 # each row is a node in the order of node_info
 features_TFIDF = vectorizer.fit_transform(corpus)
-pairwise_similarity = [] #features_TFIDF * features_TFIDF.T
+pairwise_similarity = features_TFIDF * features_TFIDF.T
 #print pairwise_similarity.shape
 # ---Create graph--- #
 g = create_graph(training_set, IDs)
@@ -82,10 +82,6 @@ to_keep = random.sample(range(len(training_set)), k=int(round(len(training_set)*
 training_set_reduced = [training_set[i] for i in to_keep]
 # create training features
 
-# TODO delete
-#testing_features = feature_engineering(testing_set, IDs, node_info, stemmer, stpwds, g, pairwise_similarity)
-#np.save(path_to_data + 'testing_features100.npy', testing_features)
-#testing_set = testing_set[:100] # TODO delete
 if quick_eval_mode:
     print "Loading pre-trained features"
     training_features = np.load(path_to_data + 'training_features100.npy')
@@ -209,7 +205,7 @@ else:
 
             # use median instead of 0.5 if we want 50/50 split between classes
             #predictions_med = [0 if x>np.median(avg_prob_predictions[:, 0]) else 1 for x in avg_prob_predictions[:, 0]]
-            predictions_true = [0 if x>0.5 else 1 for x in avg_prob_predictions[:, 0]]
+            predictions_true = [0 if x<0.5 else 1 for x in avg_prob_predictions[:, 0]]
 
             #predictions_med = zip(range(len(testing_set)), predictions_med)
             predictions_true = zip(range(len(testing_set)), predictions_true)
