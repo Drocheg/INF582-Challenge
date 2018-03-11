@@ -68,7 +68,7 @@ corpus = [element[5] for element in node_info]
 vectorizer = TfidfVectorizer(stop_words="english")
 # each row is a node in the order of node_info
 features_TFIDF = vectorizer.fit_transform(corpus)
-pairwise_similarity = [] #features_TFIDF * features_TFIDF.T
+pairwise_similarity = features_TFIDF * features_TFIDF.T
 #print pairwise_similarity.shape
 # ---Create graph--- #
 g = create_graph(training_set, IDs)
@@ -83,8 +83,8 @@ training_set_reduced = [training_set[i] for i in to_keep]
 # create training features
 
 # TODO delete
-#testing_features = feature_engineering(testing_set, IDs, node_info, stemmer, stpwds, g, pairwise_similarity)
-#np.save(path_to_data + 'testing_features100.npy', testing_features)
+testing_features = feature_engineering(testing_set, IDs, node_info, stemmer, stpwds, g, pairwise_similarity)
+np.save(path_to_data + 'testing_features100.npy', testing_features)
 #testing_set = testing_set[:100] # TODO delete
 if quick_eval_mode:
     print "Loading pre-trained features"
