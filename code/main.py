@@ -110,10 +110,11 @@ if classifier_tuning_mode:
     sys.exit(0)
 else:
     clfs = []
-   # clfs.append(RandomForestClassifier(n_estimators=45, max_depth=25, min_samples_leaf=2, random_state=seed))
-   # clfs.append(svm.SVC(C=5, gamma=0.015, probability=True))
+    clfs.append(RandomForestClassifier(n_estimators=45, max_depth=25, min_samples_leaf=2, random_state=seed))
+    # clfs.append(svm.SVC(C=5, gamma=0.015, probability=True))
     clfs.append(LGBMClassifier())
-    clfs_names = ["random_forest", "SVC", "LGBM"]
+    # clfs_names = ["random_forest", "SVC", "LGBM"]
+    clfs_names = ["random_forest", "LGBM"]
 
 
 if cv_on:
@@ -157,7 +158,7 @@ if cv_on:
                 csv_out.writerow(row)
         print "Predictions done"
         count_classifier += 1
-    predictions_total /= 3
+    predictions_total /= 2
     predictions_true = [0 if x < 0.5 else 1 for x in predictions_total]
     # predictions_med = zip(range(len(testing_set)), predictions_med)
     predictions_true = zip(range(len(testing_set)), predictions_true)
@@ -209,7 +210,7 @@ else:
 
             # use median instead of 0.5 if we want 50/50 split between classes
             #predictions_med = [0 if x>np.median(avg_prob_predictions[:, 0]) else 1 for x in avg_prob_predictions[:, 0]]
-            predictions_true = [0 if x<0.5 else 1 for x in avg_prob_predictions[:, 0]]
+            predictions_true = [0 if x>0.5 else 1 for x in avg_prob_predictions[:, 0]]
 
             #predictions_med = zip(range(len(testing_set)), predictions_med)
             predictions_true = zip(range(len(testing_set)), predictions_true)
