@@ -32,3 +32,17 @@ def tune_SVC(train_x, train_y):
     CV_svc = GridSearchCV(estimator=svc, param_grid=params, cv=6, n_jobs=-1, verbose=100)
     CV_svc.fit(train_x, train_y)
     print CV_svc.best_params_
+
+def tune_lgbm(train_x, train_y):
+    lgb = LGBMClassifier()
+    # https://www.analyticsvidhya.com/blog/2017/06/which-algorithm-takes-the-crown-light-gbm-vs-xgboost/
+    # https://github.com/Microsoft/LightGBM/blob/master/docs/Parameters.rst
+    params = {
+    'num_leaves': [10, 31, 127],
+    'min_data_in_leaf': [4,8,16,32,64],
+    'max_depth': [4,8,16,32,64],
+    'reg_alpha': [0, 0.1, 0.5]}
+    # {'num_leaves': 127, 'reg_alpha': 0.5, 'max_depth': 8, 'min_data_in_leaf': 16}
+    CV_lgb = GridSearchCV(estimator=lgb, param_grid=params, cv=6, n_jobs=-1, verbose=100)
+    CV_lgb.fit(train_x, train_y)
+    print CV_lgb.best_params_
