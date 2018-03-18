@@ -1,7 +1,7 @@
 import csv
 def read_data():
     '''
-    Data loading and preproce
+    Data loading and preprocessing
     :return:
     '''
     path_to_data = "../data/"

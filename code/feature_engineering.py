@@ -2,7 +2,6 @@ import numpy as np
 from sklearn import preprocessing
 from gensim.models.word2vec import Word2Vec
 import igraph
-from graph_of_words import *
 
 
 def clean(s, stemmer, stpwds):
@@ -16,8 +15,10 @@ def clean(s, stemmer, stpwds):
     return s
 
 def build_w2v(node_info, stemmer, stpwds):
-    # creates w2v model from vectors
-    # ran once manually to create the needed model - slow and unneccessary to do every time the code is run
+    """
+    Creates w2v model from vectors.
+    Ran once manually to create the needed model - slow and unneccessary to do every time the code is run
+    """
     try:
         model = Word2Vec.load("w2v_model")
         print "Word2Vec model loaded"
@@ -36,6 +37,9 @@ def build_w2v(node_info, stemmer, stpwds):
     return model
 
 def count_authLinksStoT (information_set, node_info):
+    """
+    Count the number of common papers for each pair of authors
+    """
     authLinks = {}
     for i in xrange(len(information_set)):
         source = information_set[i][0]
@@ -62,6 +66,10 @@ def count_authLinksStoT (information_set, node_info):
     return authLinks
 
 def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g, pairwise_similarity):
+    """
+    Main function to create all the features
+    """
+
     # number of overlapping words in title
     overlap_title = []
     # temporal distance between the papers
@@ -70,31 +78,24 @@ def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g, pai
     comm_auth = []
     # WMD
     wmd = []
-    # number of references for the source or the target
+    w2v = build_w2v(node_info, stemmer, stpwds)
+    # number of references for the source or the target (degree of nodes)
     num_references_source = []
     num_references_target = []
+    degrees = g.degree(IDs)
     # number of common neighbors
     num_common_neighbors = []
-
-    # number of keywords: graph of words
-    num_keywords_graph_of_words = []
-
-    # TF_IDF
-    pairwise_similarity_number = []
-
-    w2v = build_w2v(node_info, stemmer, stpwds)
-
-    # the average number of citations the authors of target have received from authors of source
-    avg_number_citations_of_authors = []   
-    # Authors link counter
-    #authLinks = count_authLinksStoT(information_set, node_info)
-
-    counter = 0
-
-    degrees = g.degree(IDs)
     neighbors_list = []
     for id in IDs:
         neighbors_list.append(set(g.neighbors(id)))
+    # TF_IDF
+    pairwise_similarity_number = []
+    # the average number of citations the authors of target have received from authors of source
+    avg_number_citations_of_authors = []   
+    # Authors link counter
+    authLinks = count_authLinksStoT(information_set, node_info)
+
+    counter = 0
 
     print len(information_set), "examples to process:"
     for i in xrange(len(information_set)):
@@ -123,23 +124,21 @@ def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g, pai
         num_references_source.append(degrees[index_source])
         num_references_target.append(degrees[index_target])
         num_common_neighbors.append(len(neighbors_list[index_source].intersection(neighbors_list[index_target])))
-        #num_keywords_graph_of_words.append(len(set(keywords_graph_of_words(source_abstract)).intersection(set(keywords_graph_of_words(target_abstract)))))
-       # print pairwise_similarity.shape
         pairwise_similarity_number.append(pairwise_similarity[index_source, index_target])
 
-        # Count the average number of citations the authors of target have received from authors of source
-       # summ = 0
-       # count = 0
-       # for s in source_auth:
-       #     for t in target_auth:
-       #         key = (s,t)
-       #         if key in authLinks:
-       #             summ += authLinks[key]
-       #             count += 1
-       # if count == 0:
-       #     avg_number_citations_of_authors.append(0)
-       # else:
-       #     avg_number_citations_of_authors.append(summ/count)
+        #Count the average number of citations the authors of target have received from authors of source
+        summ = 0
+        count = 0
+        for s in source_auth:
+            for t in target_auth:
+                key = (s,t)
+                if key in authLinks:
+                    summ += authLinks[key]
+                    count += 1
+        if count == 0:
+            avg_number_citations_of_authors.append(0)
+        else:
+            avg_number_citations_of_authors.append(summ/count)
 
         counter += 1
         if counter % 1000 == 0:
@@ -153,8 +152,7 @@ def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g, pai
     list_of_features.append(num_references_source)
     list_of_features.append(num_references_target)
     list_of_features.append(num_common_neighbors)
-    #list_of_features.append(avg_number_citations_of_authors)
-    #list_of_features.append(num_keywords_graph_of_words)
+    list_of_features.append(avg_number_citations_of_authors)
     list_of_features.append(pairwise_similarity_number)
     # convert list of lists into array
     # documents as rows, unique words as columns (i.e., example as rows, features as columns)

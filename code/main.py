@@ -20,22 +20,24 @@ from sklearn.preprocessing import StandardScaler
 from lightgbm import LGBMClassifier
 
 # ---Parameters--- #
-submission_mode = False         # if a submission file should be created
-testing_mode = False            # if we want to evaluate local estimation of score
 quick_eval_mode = True          # if we want to load features from files rather than compute
 classifier_tuning_mode = False  # if we're tuning classifier hyperparameters to find optimal settings
+submission_mode = False         # if a submission file should be created
+testing_mode = False        # if we want to evaluate local estimation of score
+probabilistic_mode = False  # if we want to average probabilistic score from multiple classifiers
 cv_on = True                    # whether to use cross-validation for the local score
-probabilistic_mode = False      # if we want to average probabilistic score from multiple classifiers
-                                #   note: automatically done if cv_on
+# note: When on cross validation mode, submission files are allways created, testing is always done and the
+# average of multiple classifiers is always done. It's recommended to have cv_on = True.
 
-submission_name = "0.05_g1and2_wmd_idf_auth_citation_cv"
+
+submission_name = "g1_g2_wmd_idf_authCitation_withCV" # first part of the submission file to create
 TRAINING_SUBSAMPLING = 0.05     # subset to train on, if computing features
-LOCAL_TEST_SUBSAMPLING = 0.025  # subset for local test score
+LOCAL_TEST_SUBSAMPLING = 0.025  # subset for local test score if not using CV
 seed = 1337
 
 # ---First Initializations--- #
 random.seed(seed)               # to be able to reproduce results
-path_to_predictions = "../predictions/"
+path_to_predictions = "../predictions/" # path to folder with predictions
 path_to_data = "../data/"
 nltk.download('punkt')          # for tokenization
 nltk.download('stopwords')
@@ -44,34 +46,31 @@ stemmer = nltk.stem.PorterStemmer()
 
 # ---Read Data--- #
 testing_set, training_set, node_info = read_data()
-
 IDs = [element[0] for element in node_info]
 
 # ---Compute TFIDF vector of each paper--- #
 corpus = [element[5] for element in node_info]
 vectorizer = TfidfVectorizer(stop_words="english")
 # each row is a node in the order of node_info
-
-pairwise_similarity = [] #features_TFIDF * features_TFIDF.T
+features_TFIDF = vectorizer.fit_transform(corpus)
+pairwise_similarity = features_TFIDF * features_TFIDF.T
 
 # ---Create graph--- #
 g = create_graph(training_set, IDs)
-#authors_citations_dictionary = []
-# authors_citations_dictionary = create_authors_dictionary(training_set, node_info)
 
 # ---Training--- #
 print "Training"
-# for each training example we need to compute features
-# in this baseline we will train the model on only 5% of the training set
 to_keep = random.sample(range(len(training_set)), k=int(round(len(training_set)*TRAINING_SUBSAMPLING)))
 training_set_reduced = [training_set[i] for i in to_keep]
 # create training features
 
 if quick_eval_mode:
     print "Loading pre-trained features"
+    # Load all the features minus the author citation graph feature
     training_features = np.load(path_to_data + 'training_features100.npy')
     testing_features = np.load(path_to_data + 'testing_features100.npy')
     labels_array = np.load(path_to_data + 'labels_array100.npy')
+    # Load the author citation graph feature and concatenate it with the rest of the features
     training_auth_feature = np.array([np.load(path_to_data + 'avg_auth_train.npy').squeeze()]).T # separate loading because it was
     testing_auth_feature = np.array([np.load(path_to_data + 'avg_auth_test.npy').squeeze()]).T   # created later than the others,
     training_features = np.concatenate((training_features, training_auth_feature), axis=1)       # to avoid recomputing all
@@ -83,6 +82,7 @@ if quick_eval_mode:
     testing_features = scaler.transform(testing_features)
 
 else:
+    # Train new features and save them the local file data
     training_features = feature_engineering(training_set_reduced, IDs, node_info, stemmer, stpwds, g, pairwise_similarity)
     np.save(path_to_data + 'training_features_005.npy', training_features)
     testing_features = feature_engineering(testing_set, IDs, node_info, stemmer, stpwds, g, pairwise_similarity)
@@ -104,14 +104,15 @@ if classifier_tuning_mode:
 else:
     clfs = []
     clfs.append(MLPClassifier(solver='adam', alpha=1e-5, hidden_layer_sizes=(12, 12), random_state=seed, verbose=10))
-    #clfs.append(RandomForestClassifier(n_estimators=45, max_depth=25, min_samples_leaf=2, random_state=seed))
+    clfs.append(RandomForestClassifier(n_estimators=45, max_depth=25, min_samples_leaf=2, random_state=seed))
     clfs.append(LGBMClassifier(num_leaves=127, reg_alpha=0.5, max_depth=8, min_data_in_leaf=16))
     #clfs.append(svm.SVC(C=16, gamma=0.125, probability=True))
-    #clfs_names = ["random_forest", "SVC", "LGBM"]
-    clfs_names = ["MLP", "LGBM"]
+    clfs_names = ["MLP", "random_forest", "LGBM"]
+
 
 # ---Evaluation--- #
 if cv_on:
+    # Using cross validation
     count_classifier = 0
     predictions_total = np.zeros(len(testing_set))
     for classifier in clfs:
@@ -155,6 +156,7 @@ if cv_on:
         count_classifier += 1
 
     predictions_total /= len(clfs_names) # average over all classifiers
+    # Round up or down all the predictions
     predictions_true = [0 if x < 0.5 else 1 for x in predictions_total]
     predictions_true = zip(range(len(testing_set)), predictions_true)
 
@@ -167,6 +169,7 @@ if cv_on:
             csv_out.writerow(row)
 
 else:
+    # If CV is Off
     # train model with features and labels
     for classifier in clfs:
         print "Training single classifier..."

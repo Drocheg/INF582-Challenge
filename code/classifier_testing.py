@@ -4,6 +4,9 @@ from lightgbm import LGBMClassifier
 from sklearn import svm
 from sklearn.grid_search import GridSearchCV
 
+# File used to tune the classifiers
+
+
 def classifier_testing():
     return 
 
