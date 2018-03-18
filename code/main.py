@@ -1,81 +1,64 @@
 import random
 import numpy as np
-from sklearn import svm
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics import f1_score
-from lightgbm import LGBMClassifier
-from sklearn import svm
-from sklearn.metrics.pairwise import linear_kernel
-from sklearn.linear_model import LogisticRegression
 import nltk
 import csv
 import sys
 import pickle
-from sklearn.model_selection import KFold
 from feature_engineering import *
 from classifier_testing import *
 from read_data import *
 from graph_creation import *
+from sklearn import svm
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics import f1_score
+from sklearn.metrics.pairwise import linear_kernel
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import KFold
 from sklearn.ensemble import RandomForestClassifier
-
 from sklearn.neural_network import MLPClassifier
 from sklearn.preprocessing import StandardScaler
+from lightgbm import LGBMClassifier
 
 # ---Parameters--- #
-submission_mode = False
-testing_mode = False
-quick_eval_mode = True
-classifier_tuning_mode = False
-probabilistic_mode = False
-cv_on = True
+submission_mode = False         # if a submission file should be created
+testing_mode = False            # if we want to evaluate local estimation of score
+quick_eval_mode = True          # if we want to load features from files rather than compute
+classifier_tuning_mode = False  # if we're tuning classifier hyperparameters to find optimal settings
+cv_on = True                    # whether to use cross-validation for the local score
+probabilistic_mode = False      # if we want to average probabilistic score from multiple classifiers
+                                #   note: automatically done if cv_on
+
 submission_name = "0.05_g1and2_wmd_idf_auth_citation_cv"
-TRAINING_SUBSAMPLING = 0.05
-LOCAL_TEST_SUBSAMPLING = 0.025
+TRAINING_SUBSAMPLING = 0.05     # subset to train on, if computing features
+LOCAL_TEST_SUBSAMPLING = 0.025  # subset for local test score
 seed = 1337
-print "training subsample: ", TRAINING_SUBSAMPLING
-print "testing mode: ", testing_mode
-if testing_mode:
-    print "testing subsample: ", LOCAL_TEST_SUBSAMPLING
-print "submission mode: ", submission_mode
-if submission_mode:
-    print "submitting with name: ", submission_name
 
 # ---First Initializations--- #
-random.seed(seed)  # to be able to reproduce results
+random.seed(seed)               # to be able to reproduce results
 path_to_predictions = "../predictions/"
 path_to_data = "../data/"
-nltk.download('punkt')  # for tokenization
+nltk.download('punkt')          # for tokenization
 nltk.download('stopwords')
 stpwds = set(nltk.corpus.stopwords.words("english"))
 stemmer = nltk.stem.PorterStemmer()
 
-###############################
-# beating the random baseline #
-###############################
-# the following script gets an F1 score of approximately 0.66
-
 # ---Read Data--- #
 testing_set, training_set, node_info = read_data()
-# the columns of the node_info data frame are:
-# (1) paper unique ID (integer)
-# (2) publication year (integer)
-# (3) paper title (string)
-# (4) authors (strings separated by ,)
-# (5) name of journal (optional) (string)
-# (6) abstract (string) - lowercased, free of punctuation except intra-word dashes
+
 IDs = [element[0] for element in node_info]
 
 # ---Compute TFIDF vector of each paper--- #
 corpus = [element[5] for element in node_info]
 vectorizer = TfidfVectorizer(stop_words="english")
 # each row is a node in the order of node_info
-#features_TFIDF = vectorizer.fit_transform(corpus)
+
 pairwise_similarity = [] #features_TFIDF * features_TFIDF.T
-#print pairwise_similarity.shape
+
 # ---Create graph--- #
 g = create_graph(training_set, IDs)
 #authors_citations_dictionary = []
 # authors_citations_dictionary = create_authors_dictionary(training_set, node_info)
+
 # ---Training--- #
 print "Training"
 # for each training example we need to compute features
@@ -89,12 +72,12 @@ if quick_eval_mode:
     training_features = np.load(path_to_data + 'training_features100.npy')
     testing_features = np.load(path_to_data + 'testing_features100.npy')
     labels_array = np.load(path_to_data + 'labels_array100.npy')
-    training_auth_feature = np.array([np.load(path_to_data + 'avg_auth_train.npy').squeeze()]).T
-    testing_auth_feature = np.array([np.load(path_to_data + 'avg_auth_test.npy').squeeze()]).T
-    training_features = np.concatenate((training_features, training_auth_feature), axis=1)
+    training_auth_feature = np.array([np.load(path_to_data + 'avg_auth_train.npy').squeeze()]).T # separate loading because it was
+    testing_auth_feature = np.array([np.load(path_to_data + 'avg_auth_test.npy').squeeze()]).T   # created later than the others,
+    training_features = np.concatenate((training_features, training_auth_feature), axis=1)       # to avoid recomputing all
     testing_features = np.concatenate((testing_features, testing_auth_feature), axis=1)
 
-    scaler = StandardScaler()
+    scaler = StandardScaler()       # scaling all input features, neccessary for some models
     scaler.fit(training_features)
     training_features = scaler.transform(training_features)
     testing_features = scaler.transform(testing_features)
@@ -111,7 +94,8 @@ else:
     np.save(path_to_data + 'labels_array_005.npy', labels_array)
     print "Features calculated"
 
-# initialize classifier(s)
+# ---Classifiers--- #
+# tune classifiers and then shut down, or initialize classifier(s) if not in tuning mode
 if classifier_tuning_mode:
     #tune_rf(train_x=training_features, train_y=labels_array,seed=seed)
     #tune_SVC(train_x=training_features, train_y=labels_array)
@@ -119,12 +103,6 @@ if classifier_tuning_mode:
     sys.exit(0)
 else:
     clfs = []
-    print "training_features.shape: "
-    print training_features.shape
-    
-    print "training_features[   10,:]: "
-    print training_features[10,:]
-
     clfs.append(MLPClassifier(solver='adam', alpha=1e-5, hidden_layer_sizes=(12, 12), random_state=seed, verbose=10))
     #clfs.append(RandomForestClassifier(n_estimators=45, max_depth=25, min_samples_leaf=2, random_state=seed))
     clfs.append(LGBMClassifier(num_leaves=127, reg_alpha=0.5, max_depth=8, min_data_in_leaf=16))
@@ -132,7 +110,7 @@ else:
     #clfs_names = ["random_forest", "SVC", "LGBM"]
     clfs_names = ["MLP", "LGBM"]
 
-
+# ---Evaluation--- #
 if cv_on:
     count_classifier = 0
     predictions_total = np.zeros(len(testing_set))
@@ -161,12 +139,13 @@ if cv_on:
             # Make test set prediction
             predictions += classifier.predict_proba(testing_features)[:, 1]
             cv_index += 1
-        print "mean score: ", sum(validation_scores)/5
+        print "mean score: ", sum(validation_scores)/5 # average the score over the folds
         predictions /= 5
         predictions_total += predictions
         predictions_true = [0 if x < 0.5 else 1 for x in predictions]
-        # predictions_med = zip(range(len(testing_set)), predictions_med)
         predictions_true = zip(range(len(testing_set)), predictions_true)
+
+        # ---Write to submission file for single classifier--- #
         with open(path_to_predictions + submission_name + "_" + clfs_names[count_classifier] + "_predictions.csv", "wb") as pred1:
             csv_out = csv.writer(pred1)
             csv_out.writerow(('ID', 'category'))
@@ -174,16 +153,19 @@ if cv_on:
                 csv_out.writerow(row)
         print "Predictions done"
         count_classifier += 1
-    predictions_total /= 2
+
+    predictions_total /= len(clfs_names) # average over all classifiers
     predictions_true = [0 if x < 0.5 else 1 for x in predictions_total]
-    # predictions_med = zip(range(len(testing_set)), predictions_med)
     predictions_true = zip(range(len(testing_set)), predictions_true)
+
+    # ---Write to submission file for ensemble--- #
     with open(path_to_predictions + submission_name + "_predictions_total.csv",
               "wb") as pred1:
         csv_out = csv.writer(pred1)
         csv_out.writerow(('ID', 'category'))
         for row in predictions_true:
             csv_out.writerow(row)
+
 else:
     # train model with features and labels
     for classifier in clfs:

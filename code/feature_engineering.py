@@ -6,6 +6,7 @@ from graph_of_words import *
 
 
 def clean(s, stemmer, stpwds):
+    # cleans up string given stopwords and stemmer
     s = s.lower().split(" ")
     s = [token for token in s if token not in stpwds]
     s = [stemmer.stem(token) for token in s]
@@ -15,6 +16,8 @@ def clean(s, stemmer, stpwds):
     return s
 
 def build_w2v(node_info, stemmer, stpwds):
+    # creates w2v model from vectors
+    # ran once manually to create the needed model - slow and unneccessary to do every time the code is run
     try:
         model = Word2Vec.load("w2v_model")
         print "Word2Vec model loaded"
@@ -57,7 +60,6 @@ def count_authLinksStoT (information_set, node_info):
                 else:
                     authLinks[key] = 1
     return authLinks
-
 
 def feature_engineering(information_set, IDs, node_info, stemmer, stpwds, g, pairwise_similarity):
     # number of overlapping words in title
